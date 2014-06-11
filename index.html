@@ -1,0 +1,87 @@
+<!DOCTYPE HTML>
+
+<html lang="en">
+  
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf8">
+    <title>PDX+D3</title>
+
+    <link rel="stylesheet" href="css/grid.css" type="text/css" media="screen">    
+    <link rel="stylesheet" href="css/reset.css" type="text/css" media="screen">
+    <link rel="stylesheet" href="css/style.css" type="text/css" media="screen">
+
+    <!-- <link href='http://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css'> -->
+
+    <script src="js/d3/d3.min.js" charset="utf-8"></script>
+
+  </head>
+
+  <body>
+    <header>
+      <h1>Portland Weather Visualized</h1>
+      <h3>A Simple D3 Calendar</h3>
+    </header>
+
+    <div class="container">
+      <p>
+        The data used in this visualization is from NOAA's qcld reports which contain hourly
+        updates on all aspects of the weather at a given station. The data used here is from Portland's International Airport station in Oregon and visualizes the sky condition field (after consolidation and cleaning up the data).
+      </p>
+      <div id="chart">
+        <script type="text/javascript">
+          var margin = {top: 20, right: 20, left: 20, bottom:10}
+          var hrH = 10; //height of each hour
+          var dayW = 3; //width of each day
+          var dayH = hrH * 24; //height of each day
+          var w = dayW * 366 + margin.left + margin.right;
+          var h = 2000 - margin.top - margin.bottom;
+          
+          var colors = [ "#b6e6ff", "#a7cadc", "#98aeba", "#899399", "#797979" ] //colors to display sky conditions  
+          //L:90, c:36, h:270 to L:51, c:0, h:191 
+
+          d3.csv("/data/2013.csv", function(csv) { 
+            // Create container SVG element
+            var svg = d3.select("#chart")
+                        .append("svg")
+                        .attr("width", w)
+                        .attr("height", h);
+            // Create hourly sky condition rects           
+            var skyConditionMap = svg.selectAll("rect")
+               .data(csv)
+               .enter()
+               .append("rect")
+               .attr("x", function(d) {
+                  return d3.time.dayOfYear(new Date(d.csv_date)) * dayW + margin.left; })
+               .attr("y", function(d) {
+                  return ((+d.hour) * hrH) + margin.top; })
+               .attr("rx", 1)
+               .attr("ry", 1)
+               .attr("width", dayW)
+               .attr("height", hrH)
+               //.text(function(d) { return (+d.sky_condition); })
+               .style("fill", 'white')
+              
+          
+              skyConditionMap.transition()
+                .duration(5)
+                .delay(function(d, i) { return i * 10; })
+                .ease("linear")
+                .attr("x", function(d) {
+                  return d3.time.dayOfYear(new Date(d.csv_date)) * dayW + margin.left; })
+                .attr("y", function(d) {
+                  return ((+d.hour) * hrH) + margin.top; })
+                .attr("rx", 1)
+                .attr("ry", 1)
+                .style("fill", 
+                  function(d) {
+                     return colors[(+d.sky_condition)]; }) 
+              });
+        </script>
+      </div>
+    </div> 
+    <div id="copyright">
+      <p> &copy; 2013 Data Design Works. All Rights Reserved.</p>
+    </div> 
+  </body>
+
+</html>

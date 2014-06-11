@@ -1,0 +1,70 @@
+body {
+	font-family: 'Montserrat', sans-serif;
+	color: #333333;
+	shape-rendering: crispEdges;
+}
+
+header {
+	color: steelblue;
+	padding: 2% 2% 3% 2%;
+}
+
+header h1 {
+	font-size: 1.750em;
+	letter-spacing: -1.5px;
+	margin: 10px 0 0;
+	text-align: left;
+	padding: 0 0 5px 0;
+}
+
+header h3 {
+	font-size: 1em;
+	margin: 0;
+}
+
+a {
+	color: #4FB69F;
+	text-decoration: none;
+}
+
+h1 {
+	font-size: 1.750em;
+	letter-spacing: -1.5px;
+	border: solid 1px;
+	margin: 10px 0 0;
+	text-align: left;
+}
+
+h3 {
+	border: solid 1px;
+	font-size: 1em;
+	margin: 0;
+}
+
+.container {
+	width: 1050px;
+	margin: auto;
+}
+
+
+#chart {
+	min-width: 1000px;
+	min-height: 300px;
+	margin: auto;
+}
+
+.nav {
+	font-size: -.5em;
+}
+
+#copyright {
+	border-top: 8px solid #2A0400;
+	padding: 10px 0px;
+	margin: 15px 0px;
+	text-align: center;
+}
+
+
+
+
+
