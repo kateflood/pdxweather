@@ -1,2 +1,5 @@
 # don't bring all the data
-/data/weather
+/data/weather/
+
+test.html
+monthbymonth.html
