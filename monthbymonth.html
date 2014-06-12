@@ -9,100 +9,127 @@
     <link rel="stylesheet" href="css/grid.css" type="text/css" media="screen">    
     <link rel="stylesheet" href="css/reset.css" type="text/css" media="screen">
     <link rel="stylesheet" href="css/style.css" type="text/css" media="screen">
-<!-- 
-    <link href='http://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css'> -->
+
+    <!-- <link href='http://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css'> -->
 
     <script src="js/d3/d3.min.js" charset="utf-8"></script>
-    
-    <!-- Viewport for Resposive Design -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" >
-    <!-- <link rel="shortcut icon" href="images/fingerprint.jpg" type="image/jpg"> -->
+
   </head>
 
   <body>
-    <div class="container">
-      <div class="header">
-        <h1>Portland Weather Visualized</h1>
-        <h3>A Simple D3 Calendar</h3>
+    <header class="grid_12">
+      <h1>Portland Weather Visualized</h1>
+      <h3>A Simple D3 Calendar</h3>
+    </header>
+
+    <section class="grid_3 side_bar">
+      <div class='year'>
+        <p>What year do you want to see?</p>
+        <select name='year'>
+          <option value='2013'>2013</option>
+          <option value='2012'>2012</option>
+        </select>
+      </div>
+      <div class='display'>
+        <p>What do you want to see?</p>
+        <select name='display'>
+          <option value='cloud'>Cloud Cover</option>
+          <option value='temp'>Temperature</option>
+          <option valaue='rain'>Precipitation</option>
+        </select>
+      </div>
+      <div class='data_notes'>
+        <h3>Data Notes</h3>
+        <p>
+          The data used is from NOAA's qcld reports which contain hourly
+          updates on all aspects of the weather at a given station. The station displayed here data used here is Portland, Oregon's PDX International Airport.
+        </p>
       </div>
 
-      <div class="main">
-        <p>
-          The data used in this visualization is from NOAA's qcld reports which contain hourly
-          updates on all aspects of the weather at a given station. The data used for here is from Portland's International Airport station in Oregon and visualizes the sky condition field (after consolidation and cleaning up the data).
-        </p>
-        <div id="chart">
-          <script type="text/javascript">
-            <script type="text/javascript">
-          var margin = {top: 20, right: 20, left: 20, bottom:10}
-          var hrH = 5; //height of each hour
-          var dayW = 2; //width of each day
-          var dayH = hrH * 24; //height of each day
-          var w = dayW * 366 + margin.left + margin.right;
-          var h = 2000 - margin.top - margin.bottom;
+    </section>
+    <section class="grid_9 omega">
+      <div id="chart">
+      <script type="text/javascript">
+        <script type="text/javascript">
+      var margin = {top: 20, right: 20, left: 20, bottom:10}
+      var hrH = 5; //height of each hour
+      var dayW = 2; //width of each day
+      var dayH = hrH * 24; //height of each day
+      var w = dayW * 366 + margin.left + margin.right;
+      var h = 2000 - margin.top - margin.bottom;
 
-          var calendarColumns = 3
-          var calendarRows = 4
-          
-          var colors = [ "#b6e6ff", "#a7cadc", "#98aeba", "#899399", "#797979" ] //colors to display sky conditions  
-          //L:90, c:36, h:270 to L:51, c:0, h:191 
-
-          d3.csv("/data/test.csv", function(csv) { 
-            // Create container SVG element
-            var svg = d3.select("#chart")
-                        .append("svg")
-                        .attr("width", w)
-                        .attr("height", h);
-            // Create hourly sky condition rects           
-            var skyConditionMap = svg.selectAll("rect")
-               .data(csv)
-               .enter()
-               .append("rect")
-               .attr("x", function(d) {
-                if (+d.Month <= calendarColumns) {
-                    return ((+d.Month - 1) * monthColW + (+d.Day * dayW));
-                  } else {
-                    return ((+d.Month - 1 - calendarColumns) * monthColW + (+d.Day * dayW)); }
-                  })
-               .attr("y", function(d) {
-                      return ((+d.Month-1) * dayH) + ((+d.Hour) * hrH) + margin.top;})
-               .attr("rx", 1)
-               .attr("ry", 1)
-               .attr("width", dayW)
-               .attr("height", hrH)
-               .style("fill",function(d) {
-                      return colors[(+d.ConvertSky)];})
-              });
-                
-                // slowEntry()
-
-                // function slowEntry () {
-                //   skyConditionMap.transition()
-                //   .duration(750)
-                //   .delay(function(d, i) { return i * 10; })
-                //   .ease("linear")
-                //   .attr("x", function(d) {
-                //   if (+d.month <= calendarColumns) {
-                //       return ((+d.month- 1) * monthColW + (+d.day * dayW));
-                //     } else {
-                //       return ((+d.month - 1 - calendarColumns) * monthColW + (+d.day * dayW)); 
-                //     }
-                //     })
-                //   .attr("y", function(d) {
-                //     return (Math.ceil(+d.month/ calendarColumns) * hrH + margin.top + monthRowH * Math.ceil(+d.month/calendarColumns));
-                //   })
-                //   .attr("rx", 1)
-                //   .attr("ry", 1)
-                //   };
-          </script>
-        </div>
-      </div> 
+      var calendarColumns = 3
+      var calendarRows = 4
       
-      <div id="copyright">
-        <p> &copy; 2013 Data Design Works. All Rights Reserved.</p>
-      </div> 
+      var colors = [ "#b6e6ff", "#a7cadc", "#98aeba", "#899399", "#797979" ] //colors to display sky conditions  
+      //L:90, c:36, h:270 to L:51, c:0, h:191 
+      var data;
+      d3.csv("/data/test.csv", function(csv) { 
 
-    </div> <!-- container close div -->
+        data=d3.nest()
+          .key(function(d) {return d3.time.Month(new Date(d.csv_date);})
+          .entries(csv);
+
+
+          var g=svg.selectAll("g")
+            .data(data)
+            .enter()
+            .append("g")
+            .attr("transform", function(d,i) { return "translate("+((dayW*32)*i)+",0)";});
+            g
+            .append("rect")
+            .attr("x")
+        // Create container SVG element
+        // var svg = d3.select("#chart")
+        //             .append("svg")
+        //             .attr("width", w)
+        //             .attr("height", h);
+
+
+        // Create hourly sky condition rects           
+        // var skyConditionMap = svg.selectAll("rect")
+        //    .data(csv)
+        //    .enter()
+        //    .append("rect")
+        //    .attr("x", function(d) {
+        //     if (+d.Month <= calendarColumns) {
+        //         return ((+d.Month - 1) * monthColW + (+d.Day * dayW));
+        //       } else {
+        //         return ((+d.Month - 1 - calendarColumns) * monthColW + (+d.Day * dayW)); }
+        //       })
+        //    .attr("y", function(d) {
+        //           return ((+d.Month-1) * dayH) + ((+d.Hour) * hrH) + margin.top;})
+        //    .attr("rx", 1)
+        //    .attr("ry", 1)
+        //    .attr("width", dayW)
+        //    .attr("height", hrH)
+        //    .style("fill",function(d) {
+        //           return colors[(+d.ConvertSky)];})
+        //   });
+            
+            // slowEntry()
+
+            // function slowEntry () {
+            //   skyConditionMap.transition()
+            //   .duration(750)
+            //   .delay(function(d, i) { return i * 10; })
+            //   .ease("linear")
+            //   .attr("x", function(d) {
+            //   if (+d.month <= calendarColumns) {
+            //       return ((+d.month- 1) * monthColW + (+d.day * dayW));
+            //     } else {
+            //       return ((+d.month - 1 - calendarColumns) * monthColW + (+d.day * dayW)); 
+            //     }
+            //     })
+            //   .attr("y", function(d) {
+            //     return (Math.ceil(+d.month/ calendarColumns) * hrH + margin.top + monthRowH * Math.ceil(+d.month/calendarColumns));
+            //   })
+            //   .attr("rx", 1)
+            //   .attr("ry", 1)
+            //   };
+      </script>
+      </div>
+    </section>  
   </body>
 
 </html>

@@ -17,27 +17,51 @@
   </head>
 
   <body>
-    <header>
+    <header class="grid_12">
       <h1>Portland Weather Visualized</h1>
       <h3>A Simple D3 Calendar</h3>
     </header>
 
-    <div class="container">
-      <p>
-        The data used in this visualization is from NOAA's qcld reports which contain hourly
-        updates on all aspects of the weather at a given station. The data used here is from Portland's International Airport station in Oregon and visualizes the sky condition field (after consolidation and cleaning up the data).
-      </p>
+    <section class="grid_3 side_bar">
+      <div class='year'>
+        <p>What year do you want to see?</p>
+        <select name='year'>
+          <option value='2013'>2013</option>
+          <option value='2012'>2012</option>
+        </select>
+      </div>
+      <div class='display'>
+        <p>What do you want to see?</p>
+        <select name='display'>
+          <option value='cloud'>Cloud Cover</option>
+          <option value='temp'>Temperature</option>
+          <option valaue='rain'>Precipitation</option>
+        </select>
+      </div>
+      <div class='data_notes'>
+        <h3>Data Notes</h3>
+        <p>
+          The data used is from NOAA's qcld reports which contain hourly
+          updates on all aspects of the weather at a given station. The station displayed here data used here is Portland, Oregon's PDX International Airport.
+        </p>
+      </div>
+
+    </section>
+    <section class="grid_9 omega">
       <div id="chart">
         <script type="text/javascript">
           var margin = {top: 20, right: 20, left: 20, bottom:10}
           var hrH = 10; //height of each hour
-          var dayW = 3; //width of each day
+          var dayW = 2; //width of each day
           var dayH = hrH * 24; //height of each day
           var w = dayW * 366 + margin.left + margin.right;
           var h = 2000 - margin.top - margin.bottom;
           
           var colors = [ "#b6e6ff", "#a7cadc", "#98aeba", "#899399", "#797979" ] //colors to display sky conditions  
           //L:90, c:36, h:270 to L:51, c:0, h:191 
+
+          //a horrible hacky answer
+          var calColumns = [ 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4]
 
           d3.csv("/data/2013.csv", function(csv) { 
             // Create container SVG element
@@ -63,8 +87,8 @@
               
           
               skyConditionMap.transition()
-                .duration(5)
-                .delay(function(d, i) { return i * 10; })
+                // .duration(.5)
+                // .delay(function(d, i) { return i * 10; })
                 .ease("linear")
                 .attr("x", function(d) {
                   return d3.time.dayOfYear(new Date(d.csv_date)) * dayW + margin.left; })
@@ -78,10 +102,7 @@
               });
         </script>
       </div>
-    </div> 
-    <div id="copyright">
-      <p> &copy; 2013 Data Design Works. All Rights Reserved.</p>
-    </div> 
+    </section>  
   </body>
 
 </html>
