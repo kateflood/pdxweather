@@ -1,6 +1,5 @@
 # don't bring all the data
-/data/weather/
+archive/
 
-test.html
 monthbymonth.html
 .DSStore
