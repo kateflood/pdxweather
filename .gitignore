@@ -1,5 +1,4 @@
 # don't bring all the data
 archive/
 
-monthbymonth.html
-.DSStore
+.DS_Store
