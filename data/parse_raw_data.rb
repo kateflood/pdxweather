@@ -5,22 +5,29 @@ require 'pry'
 
 class ParseCSV
   attr_accessor :data_array
+  attr_accessor :year
 
-  def initialize
+  def initialize(year)
     @data_array = [] # container array for each row
+    @year = year
   end
 
-  def find_a_file(year)
+  def find_a_file()
     (1..12).each do |m|
-      filename = './weather/noaahourly_' + m.to_s + year + '.txt'
+      filename = '../archive/weather/noaahourly_' + m.to_s + @year + '.txt'
       fetch_data(filename)
     end
   end
 
   def fetch_data(filename)
     f = File.open(filename)
+    if @year == '2012'
+      drop_row = 8
+    else
+      drop_row = 6
+    end
     # drop in to file past misc header matter
-    f.drop(8).each do |row|
+    f.drop(drop_row).each do |row|
       unless row == "\n"
         add_row = make_row_array(row)
         check_for_duplicates(add_row)
@@ -28,7 +35,8 @@ class ParseCSV
       end
     end
     f.close
-    write_to_csv('2013.csv', data_array)
+    f_csv = @year + '.csv'
+    write_to_csv(f_csv, data_array)
   end
 
   def make_row_array(row)
@@ -43,6 +51,10 @@ class ParseCSV
       new_row << row_array[2][0..1]
       # get sky condition
       new_row << convert_sky_condition(row_array[4])
+      # get temp
+      new_row << row_array[10]
+      # get precipitation
+      new_row << row_array[40]
     end
   end
 
@@ -72,7 +84,7 @@ class ParseCSV
 
   def write_to_csv(filename, data_array)
     CSV.open(filename, "w") do |csv|
-      csv << ["csv_date", "hour", "sky_condition"]
+      csv << ["csv_date", "hour", "sky_condition", "temp", "precipitation"]
       data_array.each do |row|
         csv << row
       end
@@ -80,16 +92,5 @@ class ParseCSV
   end
 end
 
-get_data = ParseCSV.new
-get_data.find_a_file('2013')
-
-# iterate through data files one by one
-
-# at each file, grab each row and make an array of the necessary data
-# get date field as is for now
-# create an hour field
-# get temp for future
-# sky coverage - this will have to be function that returns correct number
-# will also need something to check for duplicate hours
-# take each row array and put that into a container array
-# when done, write the container array to a csv
+get_data = ParseCSV.new('2013')
+get_data.find_a_file()
