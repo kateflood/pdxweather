@@ -43,8 +43,7 @@
       <div class='data_notes'>
         <h3>Data Notes</h3>
         <p>
-          The data used is from NOAA's qcld reports which contain hourly
-          updates on all aspects of the weather at a given station. The station data used here is Portland, Oregon's PDX International Airport.
+          The data used is from NOAA's hourly QCLCD (Quality Controller Local Climatological Data) reports which contain hourly updates on all aspects of the weather at a given station. The station data used here is Portland, Oregon's PDX International Airport.
         </p>
       </div>
 
@@ -52,7 +51,6 @@
     <section class="grid_9 omega">
       <div id="chart">
       <script type="text/javascript">
-      
 
       var mMargin = 20
       var hrH = 5; //height of each hour
@@ -71,67 +69,78 @@
       var layoutMonthX = [0,1,2,0,1,2,0,1,2,0,1,2]
 
       
-      var colors = [ "#b6e6ff", "#a7cadc", "#98aeba", "#899399", "#797979" ] //colors to display sky conditions  
+      var sky_colors = [ "#b6e6ff", "#a7cadc", "#98aeba", "#899399", "#797979" ] //colors to display sky conditions  
       //L:90, c:36, h:270 to L:51, c:0, h:191 
+      var rain_colors = []
+      var temp_colors = []
 
       var svg = d3.select("#chart")
                     .append("svg")
                     .attr("width", w)
                     .attr("height", h);
+      var months = d3.range(12)
+
+      var g = svg.selectAll("g")
+          .data(months)
+          .enter()
+          .append("g")
+          .style("fill", "white")
+          .style("stroke", "white")
+          .attr("transform", function(d) { return "translate(" + ((mWidth) * layoutMonthX[d] + mMargin ) +","+ ((layoutMonthY[d] * mHeight) + mMargin) + ")";})
+
+
+          // g 
+          //   .append("text")
+          //   .attr("y", mHeight - mMargin/4)
+          //   .attr("x", mMargin/2)
+          //   .style("fill", "steelblue")
+          //   .text(function(d) { return formatTitle(new Date(d));});
+
       var data;
-      
-      function makeCalendar(year, display) {
+
+      function update() {
+        var year = $( "input:radio[name=year]:checked" ).val();
         var f = '/data/' + year + '.csv'
         d3.csv(f, function(csv) { 
           data=d3.nest()
             .key(function(d) {return formatKey(new Date(d.csv_date));})
             .entries(csv);
-          // layout the months in groups
-          var g=svg.selectAll("g")
-            .data(data)
-            .enter()
-            .append("g")
-            .attr("transform", function(d,i) { return "translate(" + ((mWidth) * layoutMonthX[i] + mMargin ) +","+ ((layoutMonthY[i] * mHeight) + mMargin) + ")";})
-            .style("fill", 'steelblue');
-            // add the month names
-            g
-              .append("text")
-              .attr("y", mHeight - mMargin/4)
-              .attr("x", mMargin/2)
-              .text(function(d) { return formatTitle(new Date(d.key));})
-            // display the condition for every hour of every day
-            g.selectAll("rect")
+          g.data(data)
+
+          var hours = g.selectAll("rect")
             .data(function(d) { return d.values})
-            .enter()
-              .append("rect")
-              .attr("x", function(d) {
-                  return (formatDay(new Date(d.csv_date))) * dayW; })
-               .attr("y", function(d) {
-                  return ((+d.hour) * hrH); })
-               .text(function(d) { return d.hour; })
-               .attr("width", dayW)
-               .attr("height", hrH)
-               .style("fill", 
-                  function(d) { return colors[(+d.sky_condition)]; }) 
-               .style("stroke", 'grey')
+            // update existing elements
+            hours.style("fill", 
+              function(d) { return colors[(+d.sky_condition)]; })
+              // .style("stroke", 'white');
+            // enter new elements
+            hours.enter()
+            .append("rect")
+            .attr("x", function(d) {
+              return (formatDay(new Date(d.csv_date))) * dayW; })
+            .attr("y", function(d) {
+              return ((+d.hour) * hrH); })
+            .attr("width", dayW)
+            .attr("height", hrH)
+            .style("fill", 
+              function(d) { return colors[(+d.sky_condition)]; })
+              .style("stroke", 'white');
+            hours.text(function(d) { return d.csv_date + " " + d.hour; });
+            // exit - remove elements no longer there
+            // hours.exit().remove();
+        });
 
-          })
-        };
-
-      function loadCalendar() {
-        var year = $( "input:radio[name=year]:checked" ).val();
-        var display = $( "input:radio[name=display]:checked" ).val();
-        makeCalendar(year, display);
+        
       };
 
       // on page load...
       $(document).ready( function () { 
-        loadCalendar();
+        update();
       });
 
-      // on year change
+      // on year or display change
       $( ".options" ).change(function() {
-        loadCalendar();
+        update();
       });
 
       </script>

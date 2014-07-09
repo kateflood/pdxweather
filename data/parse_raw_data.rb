@@ -92,5 +92,5 @@ class ParseCSV
   end
 end
 
-get_data = ParseCSV.new('2013')
+get_data = ParseCSV.new('2012')
 get_data.find_a_file()
