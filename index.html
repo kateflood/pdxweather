@@ -32,18 +32,24 @@
       <div class='display'>
         <p>What do you want to see?</p>
         <div class='display'>
-          <input type='radio' name='display' id='cloud_cover' value='cloud_cover' checked/><label for='cloud_cover'>Cloud Cover</label>
+          <input type='radio' name='display' id='cloud_cover' value='cloud_cover' checked/>
+          <label for='cloud_cover'>Cloud Cover</label>
           <br>
-          <input type='radio' name='display' id='temp' value='temp'/><label for='temp'>Temperature</label>
+          <input type='radio' name='display' id='temp' value='temp'/>
+          <label for='temp'>Temperature</label>
           <br>
-          <input type='radio' name='display' id='rain' value='rain'/><label for='rain'>Precipitation</label>
+          <input type='radio' name='display' id='rain' value='rain'/>
+          <label for='rain'>Precipitation</label>
         </div>
         <br>
+      </div>
+      <div class='data_stats'>
+        <h3>Stats!</h3>
       </div>
       <div class='data_notes'>
         <h3>Data Notes</h3>
         <p>
-          The data used is from NOAA's hourly QCLCD (Quality Controller Local Climatological Data) reports which contain hourly updates on all aspects of the weather at a given station. The station data used here is Portland, Oregon's PDX International Airport.
+          The data used is from NOAA's QCLCD (Quality Controller Local Climatological Data) reports which contain hourly updates on all aspects of the weather at a given station. The station data used here is Portland, Oregon's PDX International Airport.
         </p>
       </div>
 
@@ -69,10 +75,16 @@
       var layoutMonthX = [0,1,2,0,1,2,0,1,2,0,1,2]
 
       
-      var sky_colors = [ "#b6e6ff", "#a7cadc", "#98aeba", "#899399", "#797979" ] //colors to display sky conditions  
-      //L:90, c:36, h:270 to L:51, c:0, h:191 
-      var rain_colors = []
-      var temp_colors = []
+      var sky_colors = [ "#b6e6ff", "#a7cadc", "#98aeba", "#899399", "#797979" ]
+      var rain_scale = d3.scale.linear()
+        .domain([0,.2])
+        //.range(["#ffffe5", "#bde99d", "#5ed270", "#2abc94", "#0073a5"]);
+        .range(["#fff" ,"#0073a5"])
+        .interpolate(d3.interpolateHsl);
+      var temp_scale = d3.scale.linear()
+        .domain([0,100])
+        .range(["steelblue", "red"])
+        .interpolate(d3.interpolateHsl);
 
       var svg = d3.select("#chart")
                     .append("svg")
@@ -85,21 +97,22 @@
           .enter()
           .append("g")
           .style("fill", "white")
-          .style("stroke", "white")
+          .style("stroke", "#d3d3d3")
           .attr("transform", function(d) { return "translate(" + ((mWidth) * layoutMonthX[d] + mMargin ) +","+ ((layoutMonthY[d] * mHeight) + mMargin) + ")";})
 
-
-          // g 
-          //   .append("text")
-          //   .attr("y", mHeight - mMargin/4)
-          //   .attr("x", mMargin/2)
-          //   .style("fill", "steelblue")
-          //   .text(function(d) { return formatTitle(new Date(d));});
+          // add month labels
+          g 
+            .append("text")
+            .attr("y", -4)
+            .attr("x", mMargin/2)
+            .attr("class", "calendar_text")
+            .text(function(d) { return formatTitle(new Date(2014, d, 1));});
 
       var data;
 
       function update() {
         var year = $( "input:radio[name=year]:checked" ).val();
+        var display = $ ( "input:radio[name=display]:checked" ).val()
         var f = '/data/' + year + '.csv'
         d3.csv(f, function(csv) { 
           data=d3.nest()
@@ -110,9 +123,7 @@
           var hours = g.selectAll("rect")
             .data(function(d) { return d.values})
             // update existing elements
-            hours.style("fill", 
-              function(d) { return colors[(+d.sky_condition)]; })
-              // .style("stroke", 'white');
+            hours.style("fill", get_color)
             // enter new elements
             hours.enter()
             .append("rect")
@@ -122,15 +133,30 @@
               return ((+d.hour) * hrH); })
             .attr("width", dayW)
             .attr("height", hrH)
-            .style("fill", 
-              function(d) { return colors[(+d.sky_condition)]; })
-              .style("stroke", 'white');
-            hours.text(function(d) { return d.csv_date + " " + d.hour; });
+            .style("fill", get_color)
+            hours.text(function(d) { return d.csv_date + " " + d.precipitation; });
             // exit - remove elements no longer there
-            // hours.exit().remove();
+            hours.exit().remove();
         });
 
-        
+        // retrieve heatmap colors
+        function get_color(d) {
+          switch (display) {
+            case "cloud_cover":
+             return sky_colors[(+d.sky_condition)];
+             break;
+            case "temp":
+              return temp_scale(+d.temp);
+              break;
+            case "rain":
+              if (d.precipitation === "  T") {
+                return rain_scale(.01); 
+              } else {
+                return rain_scale(+d.precipitation);
+              }
+              break;
+          }
+        };
       };
 
       // on page load...
@@ -138,8 +164,12 @@
         update();
       });
 
-      // on year or display change
+      // on year change
       $( ".options" ).change(function() {
+        update();
+      });
+      // on display change
+      $( ".display" ).change(function() {
         update();
       });
 
