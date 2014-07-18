@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="css/normalize.css" type="text/css" media="screen">
     <link rel="stylesheet" href="css/style.css" type="text/css" media="screen">
 
-    <!-- <link href='http://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css'> -->
+    <link href='http://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css'>
 
     <script src="js/d3/d3.min.js" charset="utf-8"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
@@ -23,25 +23,32 @@
       <h3>A Simple D3 Calendar</h3>
     </header>
     <section class="grid_3 side_bar">
-      <p>What year?</p>
+      <h3>Configuration!</h3>
+      <div class='station'>
+        <label for="station">Location</label>
+        <select name='station' id='station'>
+          <option value='PDX'>Portland International Airport</option>
+        </select>
+      </div> 
       <div class='year'>
-        <input type='radio' class='options' name='year' id='2012' value='2012'/><label for='2012'>2012</label>
-        <br>
-        <input type='radio' class='options' name='year' id='2013' value='2013' checked/><label for='2013'>2013</label>
+        <label for="year">Year Data</label>
+        <select name='year' id='year'>
+          <option value='2012'>2012</option>
+          <option value='2013' selected>2013</option>
+        </select>
       </div>
       <div class='display'>
-        <p>What do you want to see?</p>
-        <div class='display'>
-          <input type='radio' name='display' id='cloud_cover' value='cloud_cover' checked/>
-          <label for='cloud_cover'>Cloud Cover</label>
-          <br>
-          <input type='radio' name='display' id='temp' value='temp'/>
-          <label for='temp'>Temperature</label>
-          <br>
-          <input type='radio' name='display' id='rain' value='rain'/>
-          <label for='rain'>Precipitation</label>
+        <label for="display">Display Data</label>
+        <select name='display' id='display'>
+          <option value='sky_scale' selected>Cloud Cover</option>
+          <option value='temp_scale'>Temperature</option>
+          <option value='rain_scale'>Precipitation</option>
+        </select>
+      </div>
+      <div class='data_legend'>
+        <h3>Key!</h3>
+        <div id='legend'>
         </div>
-        <br>
       </div>
       <div class='data_stats'>
         <h3>Stats!</h3>
@@ -56,126 +63,151 @@
     </section>
     <section class="grid_9 omega">
       <div id="chart">
-      <script type="text/javascript">
-
-      var mMargin = 20
-      var hrH = 5; //height of each hour
-      var dayW = 9; //width of each day
-      var dayH = hrH * 24; //height of each day
-      var mWidth = dayW * 32 // width of each month plus one day
-      var mHeight = dayH + mMargin // height of each month plus padding
-      var w = mWidth * 3 + mMargin * 3 // svg width
-      var h = mHeight * 4 + mMargin * 4 // svg height
-
-      var formatKey = d3.time.format("%m")
-      var formatTitle = d3.time.format("%B")
-      var formatDay = d3.time.format("%_d")
-
-      var layoutMonthY = [0,0,0,1,1,1,2,2,2,3,3,3]
-      var layoutMonthX = [0,1,2,0,1,2,0,1,2,0,1,2]
-
-      
-      var sky_colors = [ "#b6e6ff", "#a7cadc", "#98aeba", "#899399", "#797979" ]
-      var rain_scale = d3.scale.linear()
-        .domain([0,.2])
-        //.range(["#ffffe5", "#bde99d", "#5ed270", "#2abc94", "#0073a5"]);
-        .range(["#fff" ,"#0073a5"])
-        .interpolate(d3.interpolateHsl);
-      var temp_scale = d3.scale.linear()
-        .domain([0,100])
-        .range(["steelblue", "red"])
-        .interpolate(d3.interpolateHsl);
-
-      var svg = d3.select("#chart")
-                    .append("svg")
-                    .attr("width", w)
-                    .attr("height", h);
-      var months = d3.range(12)
-
-      var g = svg.selectAll("g")
-          .data(months)
-          .enter()
-          .append("g")
-          .style("fill", "white")
-          .style("stroke", "#d3d3d3")
-          .attr("transform", function(d) { return "translate(" + ((mWidth) * layoutMonthX[d] + mMargin ) +","+ ((layoutMonthY[d] * mHeight) + mMargin) + ")";})
-
-          // add month labels
-          g 
-            .append("text")
-            .attr("y", -4)
-            .attr("x", mMargin/2)
-            .attr("class", "calendar_text")
-            .text(function(d) { return formatTitle(new Date(2014, d, 1));});
-
-      var data;
-
-      function update() {
-        var year = $( "input:radio[name=year]:checked" ).val();
-        var display = $ ( "input:radio[name=display]:checked" ).val()
-        var f = '/data/' + year + '.csv'
-        d3.csv(f, function(csv) { 
-          data=d3.nest()
-            .key(function(d) {return formatKey(new Date(d.csv_date));})
-            .entries(csv);
-          g.data(data)
-
-          var hours = g.selectAll("rect")
-            .data(function(d) { return d.values})
-            // update existing elements
-            hours.style("fill", get_color)
-            // enter new elements
-            hours.enter()
-            .append("rect")
-            .attr("x", function(d) {
-              return (formatDay(new Date(d.csv_date))) * dayW; })
-            .attr("y", function(d) {
-              return ((+d.hour) * hrH); })
-            .attr("width", dayW)
-            .attr("height", hrH)
-            .style("fill", get_color)
-            hours.text(function(d) { return d.csv_date + " " + d.precipitation; });
-            // exit - remove elements no longer there
-            hours.exit().remove();
-        });
-
-        // retrieve heatmap colors
-        function get_color(d) {
-          switch (display) {
-            case "cloud_cover":
-             return sky_colors[(+d.sky_condition)];
-             break;
-            case "temp":
-              return temp_scale(+d.temp);
-              break;
-            case "rain":
-              if (d.precipitation === "  T") {
-                return rain_scale(.01); 
-              } else {
-                return rain_scale(+d.precipitation);
-              }
-              break;
-          }
-        };
-      };
-
-      // on page load...
-      $(document).ready( function () { 
-        update();
-      });
-
-      // on year change
-      $( ".options" ).change(function() {
-        update();
-      });
-      // on display change
-      $( ".display" ).change(function() {
-        update();
-      });
-
-      </script>
       </div>
     </section>  
   </body>
+  <script type="text/javascript">
+
+    var mMargin = 20
+    var hrH = 5; //height of each hour
+    var dayW = 9; //width of each day
+    var dayH = hrH * 24; //height of each day
+    var mWidth = dayW * 32 // width of each month plus one day
+    var mHeight = dayH + mMargin // height of each month plus padding
+    var w = mWidth * 3 + mMargin * 3 // svg width
+    var h = mHeight * 4 + mMargin * 4 // svg height
+
+    var formatKey = d3.time.format("%m")
+    var formatTitle = d3.time.format("%B")
+    var formatDay = d3.time.format("%_d")
+
+    var layoutMonthY = [0,0,0,1,1,1,2,2,2,3,3,3]
+    var layoutMonthX = [0,1,2,0,1,2,0,1,2,0,1,2]
+
+    
+    var sky_scale = d3.scale.linear()
+      .domain([0,4])
+      .range([ "#b6e6ff","#797979" ])
+    // [ "#b6e6ff", "#a7cadc", "#98aeba", "#899399", "#797979" ]
+    var rain_scale = d3.scale.linear()
+      .domain([0,.2])
+      //.range(["#ffffe5", "#bde99d", "#5ed270", "#2abc94", "#0073a5"]);
+      .range(["#fff" ,"#0073a5"])
+      .interpolate(d3.interpolateHsl);
+    var temp_scale = d3.scale.linear()
+      .domain([0,100])
+      .range(["steelblue", "red"])
+      .interpolate(d3.interpolateHsl);
+
+    // make an svg element for the legend
+    var legend_svg = d3.select("#legend")
+                .append("svg")
+                .attr("width", dayW * 25)
+                .attr("height", 50);
+
+    // make an svg element for the chart itself
+    var svg = d3.select("#chart")
+                  .append("svg")
+                  .attr("width", w)
+                  .attr("height", h);
+    var months = d3.range(12)
+
+    var g = svg.selectAll("g")
+        .data(months)
+        .enter()
+        .append("g")
+        .style("fill", "white")
+        .style("stroke", "#d3d3d3")
+        .attr("transform", function(d) { return "translate(" + ((mWidth) * layoutMonthX[d] + mMargin ) +","+ ((layoutMonthY[d] * mHeight) + mMargin) + ")";})
+
+        // add month labels
+        g 
+          .append("text")
+          .attr("y", -4)
+          .attr("x", mMargin/2)
+          .attr("class", "calendar_text")
+          .text(function(d) { return formatTitle(new Date(2014, d, 1));});
+
+    var data;
+
+    function update() {
+      var year = $( "[name=year]" ).val();
+      var display = $ ( "[name=display]" ).val()
+      var f = '/data/' + year + '.csv'
+      d3.csv(f, function(csv) { 
+        data=d3.nest()
+          .key(function(d) {return formatKey(new Date(d.csv_date));})
+          .entries(csv);
+        g.data(data)
+
+        var hours = g.selectAll("rect")
+          .data(function(d) { return d.values})
+          // update existing elements
+          hours.style("fill", get_color)
+          // enter new elements
+          hours.enter()
+          .append("rect")
+          .attr("x", function(d) {
+            return (formatDay(new Date(d.csv_date))) * dayW; })
+          .attr("y", function(d) {
+            return ((+d.hour) * hrH); })
+          .attr("width", dayW)
+          .attr("height", hrH)
+          .style("fill", get_color)
+          hours.text(function(d) { return d.csv_date + " " + d.precipitation; });
+          // exit - remove elements no longer there
+          hours.exit().remove();
+      });
+
+      // retrieve heatmap colors
+      function get_color(d) {
+        switch (display) {
+          case "sky_scale":
+           return sky_scale(+d.sky_condition);
+           break;
+          case "temp_scale":
+            return temp_scale(+d.temp);
+            break;
+          case "rain_scale":
+            if (d.precipitation === "  T") {
+              return rain_scale(.01); 
+            } else {
+              return rain_scale(+d.precipitation);
+            }
+            break;
+        }
+      };
+
+      function make_a_legend() {
+        var keys = d3.range(5)
+        var l = legend_svg.selectAll("rect")
+                .data(keys)
+                .enter()
+                .append("rect")
+                .attr("x", function(d) { return +d * dayW * 4; })
+                .attr("width", function(d) { return 4 * dayW; })
+                .attr("height", function(d) { return 3 * dayW; })
+                .style("fill", function(d) { return sky_scale(d);})
+                .style("stroke", "#d3d3d3")
+      };
+
+      make_a_legend()
+    };
+
+    // on page load...
+    $(document).ready( function () { 
+      update();
+    });
+
+    // on year change
+    $( ".year" ).change(function() {
+      update();
+    });
+    // on display change
+    $( ".display" ).change(function() {
+      update();
+    });
+
+  </script>
 
 </html>
