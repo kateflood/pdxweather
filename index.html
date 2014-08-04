@@ -85,13 +85,12 @@
     var layoutMonthX = [0,1,2,0,1,2,0,1,2,0,1,2]
 
     
+    // color scales for the heatmap
     var sky_scale = d3.scale.linear()
       .domain([0,4])
       .range([ "#b6e6ff","#797979" ])
-    // [ "#b6e6ff", "#a7cadc", "#98aeba", "#899399", "#797979" ]
     var rain_scale = d3.scale.linear()
       .domain([0,.2])
-      //.range(["#ffffe5", "#bde99d", "#5ed270", "#2abc94", "#0073a5"]);
       .range(["#fff" ,"#0073a5"])
       .interpolate(d3.interpolateHsl);
     var temp_scale = d3.scale.linear()
@@ -110,8 +109,9 @@
                   .append("svg")
                   .attr("width", w)
                   .attr("height", h);
+    
+    // add the months as groups
     var months = d3.range(12)
-
     var g = svg.selectAll("g")
         .data(months)
         .enter()
@@ -119,7 +119,6 @@
         .style("fill", "white")
         .style("stroke", "#d3d3d3")
         .attr("transform", function(d) { return "translate(" + ((mWidth) * layoutMonthX[d] + mMargin ) +","+ ((layoutMonthY[d] * mHeight) + mMargin) + ")";})
-
         // add month labels
         g 
           .append("text")
@@ -132,7 +131,7 @@
 
     function update() {
       var year = $( "[name=year]" ).val();
-      var display = $ ( "[name=display]" ).val()
+      var display = $( "[name=display]" ).val()
       var f = '/data/' + year + '.csv'
       d3.csv(f, function(csv) { 
         data=d3.nest()
@@ -175,20 +174,56 @@
               return rain_scale(+d.precipitation);
             }
             break;
+          default:
+            return 0
         }
       };
 
+      function get_text(d) {
+          sky_text = [ 'clear', '', 'partly cloudy', '' , 'overcast']
+          switch (display) {
+            case "sky_scale":
+             return sky_text[+d.sky_condition];
+             break;
+            case "temp_scale":
+              return +d.temp;
+              break;
+            case "rain_scale":
+              return +d.precipitation;
+              break;
+            default:
+              return "n/a"
+          }
+        };
+
       function make_a_legend() {
-        var keys = d3.range(5)
+        // make data set to make dynamic legend
+        var keys = [
+            {'key':0,'sky_condition':0,'temp':0,'precipitation':0},
+            {'key':1,'sky_condition':1,'temp':32,'precipitation':.01},
+            {'key':2,'sky_condition':2,'temp':50,'precipitation':.05},
+            {'key':3,'sky_condition':3,'temp':75,'precipitation':.1},
+            {'key':4,'sky_condition':4,'temp':100,'precipitation':.2},
+            ]
+
         var l = legend_svg.selectAll("rect")
                 .data(keys)
+                .style("fill", get_color)
                 .enter()
                 .append("rect")
-                .attr("x", function(d) { return +d * dayW * 4; })
+                .attr("x", function(d) { return +d.key * dayW * 4; })
                 .attr("width", function(d) { return 4 * dayW; })
                 .attr("height", function(d) { return 3 * dayW; })
-                .style("fill", function(d) { return sky_scale(d);})
+                .attr("text", get_text)
+                .style("fill", get_color)
                 .style("stroke", "#d3d3d3")
+
+                l
+                  .append("text")
+                  .attr("x", function(d) { return +d.key * dayW * 4; })
+                  .attr("y", function(d) { return dayW * 5; })
+                  .attr("class", "calendar_text")
+                  .text( function(d) { return get_text(d) })
       };
 
       make_a_legend()
